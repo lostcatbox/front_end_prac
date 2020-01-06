@@ -5,8 +5,6 @@ from bs4 import BeautifulSoup
 
 
 
-
-
 def makechartdef():
     # content > div.article > div:nth-child(1) > div.lst_wrap > ul > li:nth-child(1)
     # content > div.article > div:nth-child(1) > div.lst_wrap > ul > li:nth-child(1) > dl > dt > a
