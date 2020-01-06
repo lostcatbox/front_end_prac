@@ -1,0 +1,141 @@
+{% extends "blog/layout.html" %}
+
+{%  block extra_body %}
+<script>
+$(function() {   //road가 끝나면 아래와 같은 함수가 실행되도록함.
+    var $win = $(window)  //jquery로 객체를 만들었고 아래를 보면 $(window).height(), $(window). scrollTop()등을 수행할수있는것.
+    //$(여기)에있는 것은 html에 dom이라는 html 문서에서 각 객체들을 불러올수있음.
+    var is_loading = false;  //???
+    var current_page = null;
+
+    var load_more = function () {
+        if (!is_loading) {
+            // var search_params = new URLSearchParams(window.location.search); // location.search는 "?page=2"를 가져오고 이것을 URLSearchRarams를 사용해 현재 페이지의 GET인자를 가공
+            // var current_page = parseInt(search_params.get('page')) || 1; // GET인자 page를 획득하고 없으면 1을 반환
+            var next_page = (current_page || 1) + 1 //current_page를 받아오는데 null이면 1로 대체한다.
+            var next_page_url = '?page=' + next_page; // 다음 페이지를 요청하기 위한 URL생성 JS는 문자열과 숫자를 더하면 문자열로 반환함,
+            is_loading = true;
+
+            $.get(next_page_url).//안에 주소로 ajax요청을 함, get인자만 주면 다시 해당데이터 응답.
+            done(function (html) {  //응답을 받은후
+                $('#post-list tbody').append(html);
+                current_page = next_page;
+                //history.pushState({}, '', next_page_url);
+            }).fail(function (xhr, textStatus, error) {
+                console.log(textStatus);
+            })
+                .always(function () {
+                    console.log("always");
+                    is_loading = false;
+                }); // 항상작동
+        }
+
+    };
+
+    // 매 화면 스크롤마다 호출
+    $win.scroll(function () {
+        // 문서의 끝에 도달했는가?
+        var diff = $(document).height() - $win.height();  //현재 전체 문서의 세로길이 - 윈도우의 세로길지==
+        if (diff == $win.scrollTop()) {  //is_loading이 false이므로 이것은 True, 값이 같아질때는 아래일어나야함
+            console.log("바닥왔음");
+
+            load_more();
+
+
+        }
+        ;
+    });
+
+    $("#load-more-btn").click(load_more);
+
+    $(document).on('click', '#post-list a', function(e) { //이렇게하면 새롭게 문서에 추가되도 click리스너 걸리게됨
+        e.preventDefault();
+
+        var detail_url = $(this).attr('href');
+
+        var title = $(this).html(); //????? 이걸로 제목만 어떻게 불러옴?
+        //alert(detail_url);
+
+        $.get(detail_url)
+            .done(function(json_obj) {
+                console.log(json_obj); //응답으로 받아오는 모든것들 볼수있음
+
+                var $modal = $('#post-modal');
+                $modal.find('.modal-title').html(json_obj.title); //id같은것에 modal-title class에 그 html 내용 에다가 '얻어온 제목'이라 변경
+                $modal.find('.modal-body').html(json_obj.content); //이렇게 구현한이유는 내용은 DB 응답받아야 가져올수있으므
+                $modal.find('.btn-detail').attr('href', detail_url); //그 태그안에 속성에 href추가함,
+                $modal.modal();
+            })
+            .fail(function(xhr, textStatus, error) {
+                alert('failed:' + error);
+            });
+
+
+
+    });
+
+});
+
+
+
+
+
+</script>
+
+
+
+
+{%  endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-sm-12">
+            <table class= "table table-bordered table-hover" id="post-list">
+                <tbody>
+                    {% include "blog/_post_list.html" %}
+
+                </tbody>
+
+            </table>
+
+            <a id="load-more-btn" class="btn btn-primary">Load More</a>
+
+
+
+
+
+                <hr/>
+                <a href="{% url "blog:post_new" %}" class="btn btn-primary">새글쓰기
+                </a>
+
+
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="post-modal" tabindex="-1">
+ <div class="modal-dialog">
+     <div class="modal-content">
+         <div class="modal-header">
+             <h5 class="modal-title">포스팅 제목</h5>
+             <button type="button" class="close" data-dismiss="modal">
+                     <span>&times;</span>
+             </button>
+         </div>
+         <div class="modal-body">
+             ...<br/>
+             ...<br/>
+             ...<br/>
+             ...<br/>
+         </div>
+         <div class="modal-footer">
+             <button type="button" class="btn btn-secondary" data-dismiss="modal">닫기</button>
+             <a class="btn btn-primary btn-detail">자세히</a>
+         </div>
+     </div>
+ </div>
+</div>
+
+
+{% endblock %}

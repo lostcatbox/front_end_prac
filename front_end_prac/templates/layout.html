@@ -1,0 +1,212 @@
+{% load static %}
+
+
+
+<!DOCTYPE html>
+
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>AskDjango Blog</title>
+
+        <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" />
+
+        {%  block extra_head %}
+        {%  endblock %}
+
+    </head>
+
+    <body>
+
+        <body>
+            <nav class="navbar navbar-default">
+                <div class="container">
+                     <div class="navbar-header">
+                         <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+                             <span class="sr-only">Toggle navigation</span>
+                             <span class="icon-bar"></span>
+                             <span class="icon-bar"></span>
+                             <span class="icon-bar"></span>
+                         </button>
+                         <a class="navbar-brand" href="{% url "blog:index" %}"> AskDjango </a>
+                     </div>
+
+                     <div id="navbar" class="collapse navbar-collapse">
+                         <ul class="nav navbar-nav">
+                             <li class="active"><a href="{% url "blog:index" %}">Home</a></li>
+                         </ul>
+                         <ul class="nav navbar-nav navbar-right">
+                             {% if not user.is_authenticated %}
+                                 <li><a href="{% url "login" %}?next={{ request.path }}" class="modal-form-btn">로그인</a></li>
+                                 <li><a href="{% url "signup" %}?next={{ request.path }}" class="modal-form-btn">회원가입</a></li>
+                             {% else %}
+
+                                 <li><a href="{% url "profile" %}">프로필</a></li>
+                                 <li><a href="{% url "logout" %}?next={{ request.path }}" class="disabled">로그아웃</a></li>
+                             {% endif %}
+
+                             <li><a href="#about">About</a></li>
+                             <li><a href="#contact">Contact</a></li>
+                         </ul>
+                     </div>
+                </div>
+            </nav>
+        </body>›
+         <h1>AskDjango Blog</h1>
+
+
+         {% block content %}
+         {% endblock %}
+    <hr/>
+    <div class="container">
+        <footer>
+        <p> 2017 &copy; <a href="https://nomade.kr"
+                           target=_blank">nomade.kr"</a>
+        </p>
+      </footer>
+    </div>
+
+
+
+
+    <script src="{% static 'jquery/dist/jquery.min.js' %}"></script>
+    <script src="{% static "bootstrap/dist/js/bootstrap.min.js" %}"></script>
+    <script src="{% static "jquery.csrf.js" %}"></script>
+    <script src="{% static "underscore/underscore-min.js" %}"></script>
+    <script src="{% static "jquery-form/dist/jquery.form.min.js" %}"></script>
+
+    {%  block extra_body %}
+    {%  endblock %}
+
+    <script>
+            $(document).on('click', '.modal-form-btn', function(e) {
+        e.preventDefault();
+
+        var action_url = $(this).attr('href');
+        var target_id = $(this).data('target-id');
+
+        $.get(action_url)
+            .done(function (form_html) {
+                var $modal = $('#modal-form-modal');
+
+                $modal.find('.modal-body').html(form_html);
+
+                $form = $modal.find('.modal-body form');
+                $form.attr('action', action_url);
+
+                if ( target_id ) {  //target_id값 존재시
+                 // modal form에 data-target-id속성을 기록
+                 // - $form.data('target-id', target_id); 를 써봤으나,
+                 // 지정이 되지않아서 attr로 변경
+                     $form.attr('data-target-id', target_id);
+                }
+                else {
+		             $form.removeData('target-id'); //target-id정보 제거
+                }
+
+                $modal.modal();
+            })
+            .fail(function (xhr, textStatus, error) {
+                alert('failed:' + error);
+
+            });
+
+        // $('#comment-form-modal').modal();
+
+    })
+
+
+    $(document).on('submit', '#modal-form-modal form', function(e) {
+        e.preventDefault();
+        console.log("Submit");
+
+
+        // jQuery Form Plugin의 ajaxSubmit을 활용 : ajax로 파일까지 모두 전달
+        $(this).ajaxSubmit({
+                success: function(response, statusText, xhr, $form) {
+                        if ( response.next_url ) { //response안에 nex_url인자 존재시
+                            window.location = response.next_url //window.location에 주소로이동임
+                            return; // 함수종료
+                        }
+
+
+
+                        console.log("---- done ----");
+                        var html = response;
+                        console.log(html);
+
+                        var $resp = $(html);
+                        var target_id = $form.data('target-id');
+
+                        if ( $resp.find('.has-error').length > 0 ) {
+                                var fields_html = $resp.html();
+                                $('#modal-form-modal .modal-body form').html(fields_html);
+                        }
+                        else {
+                            if (target_id) {
+                                $('#' + target_id).html($resp.html());
+                            }
+                            else {
+                                $resp.prependTo('#comment-list');
+                            }
+
+                            $('#modal-form-modal').modal('hide');
+                            $form[0].reset();
+                        }
+                },
+                error: function(xhr, textStatus, error) {
+                    alert('failed : ' + error);
+                },
+                complete: function(xhr, textStatus) {
+                }
+        });
+
+        $(document).on('click', '.ajax-post-confirm', function (e) {
+            e.preventDefault();
+
+            var url = $(this).attr("href");
+            var target_id = $(this).data('target-id'); //현재 링크에 data속성을 가져올떄
+            var message = $(this).data('message');
+
+            if (confirm(message)) { //confirm자체가 확인 취소를 물어보고 이는 true false로 입력된다.
+                $.post(url)
+                    .done(function () {
+                        $('#' + target_id).remove();
+                    })
+                    .fail(function (xhr, textStatus, error) {
+                        alert("failed")
+                    });
+            }
+
+            alert('clicked:' + message);
+        });
+
+    })
+
+
+
+
+    </script>
+
+
+    <div class="modal fade" id="modal-form-modal" tabindex="-1">
+         <div class="modal-dialog">
+             <div class="modal-content">
+                 <div class="modal-header">
+                     <h5 class="modal-title">Comment Form</h5>
+                     <button type="button" class="close" data-dismiss="modal">
+                            <span>&times;</span>
+                     </button>
+                 </div>
+                 <div class="modal-body">
+                     ...<br/>
+                     ...<br/>
+                     ...<br/>
+                     ...<br/>
+                 </div>
+             </div>
+         </div>
+    </div>
+
+    </body>
+</html>

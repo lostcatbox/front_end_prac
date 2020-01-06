@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>AskDjango VOD - 웹 프론트엔드 시작편 (JQuery)</title>
+</head>
+<body>
+    <h1>AskDjango VOD</h1>
+
+
+
+    <a id="btn-naver-1" href="http://m.naver.com" target="_blank">Naver Button 1</a>
+    <a id="btn-naver-2" href="http://m.naver.com" target="_blank">Naver Button 2</a>
+
+    <ul id="my-list">
+           <li>list1</li>
+           <li>list2</li>
+           <li>list3</li>
+    </ul>
+
+    <form id="query-form">
+         <input type="text" name="query" />
+         <input type="submit" value="조회" />
+    </form>
+
+    <button id="lotto-btn">로또 번호를 점지해주세요.</button>
+    <button id="remove-at-first">처음을 삭제</button>
+    <button id="remove-at-last">마지막을 삭제</button>
+
+    <div id="lotto-list"></div>
+
+
+
+
+
+
+
+
+
+
+    <script id="post-template" type="text/x-template">
+         <div class="post">
+                당첨번호는 <%= numbers %>이며, 보너스 번호는 <%= bonus %>입니다.
+         </div>
+    </script>
+
+
+
+
+    <script src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
+
+    <script>
+        $(function() {
+             console.log("웹페이지 로딩 완료");
+
+             // 리스너에 리턴값이 없기 때문에
+             // 아래 리스너가 호출될 뿐만 아니라, href 링크가 동작
+             $('#btn-naver-1').click(function() {
+                alert('clicked btn-naver-1');
+             });
+
+             // 아래 리스너가 호출되지만, href 링크는 동작하지 않습니다.
+             $('#btn-naver-2').click(function(e) {
+                //e.preventDefault(); // 디폴트 동작 수행 방지. 혹은 return false; 도 동일한 효과
+                alert('clicked btn-naver-2');
+                return false; // true를 리턴하면, 위 태그 클릭 시의 디폴트 동작 수행
+             });
+
+              $('#my-list li').click(function() {
+                     var content = $(this).html();
+                     console.log('clicked : ' + content);
+              });
+              $('#query-form').submit(function(e) {
+                     e.preventDefault();
+                     console.log("form submit");
+              });
+
+              $('#lotto-btn').click(function () {
+                  var raw_template = $('#post-template').html(); //해당아래것들을 문자열로만가져옴
+                  var tpl = _.template(raw_template); //이렇게 문자열을 넣어주면 템플릿반환
+
+                  $('#lotto-btn').click(function() {
+                         var sample = _.sample(_.range(1, 46), 6);
+                         //이렇게 아래처럼 쓰면 알아서 받아서 집어넣고 문자열로 만들어줌
+                         var rendered = tpl({
+                         numbers: sample.slice(0, 5).sort(function(x, y) { return x - y; }),
+                         bonus: sample[5]
+                         });
+                         console.log(rendered);
+                         $(rendered).appendTo('#lotto-list');
+                     });
+              });
+
+              $('#remove-at-first').click(function() {
+                 $('#lotto-list div:first').remove();
+              });
+
+              $('#remove-at-last').click(function() {
+                 $('#lotto-list div:last').remove();
+              });
+
+              $.ajax({
+                 method: "GET",
+                 url: 'http://www.melon.com/search/keyword/index.json?jscallback=?', // jsonp 핵심포인트 1) : jscallback=? 인자
+                 data: {query: '윤종신'},
+                 dataType: 'json', // jsonp 핵심포인트 2)
+                 cache: false // true 지정 : GET인자로 "_={timestamp}" 를 붙여줍니다. 매번 URL이 달라지므로 브라우저 캐싱되지 않습니다.
+              }).done(function(response) {
+                  console.log(response);
+              });
+
+        });
+
+
+    </script>
+
+
+
+
+
+ <hr/>
+    &copy; 2017. AskDjango
+</body>
+</html>

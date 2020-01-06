@@ -1,0 +1,91 @@
+
+{% extends "blog/layout.html" %}
+{% load bootstrap3 %}
+
+{% block extra_body %}
+<script>
+
+$(function() {
+
+
+    $('#check-comment').click(function(e) {
+        e.preventDefault();
+
+        var comment_id = $('#comment-list .comment:first').data('comment-id');
+        console.log(comment_id);
+
+         $.get('{% url "blog:comment_list" post.pk %}', {last_comment_id: comment_id}) //get요청의 인자로 보냄
+             .done(function(html) {
+                 console.log(html);
+                     $('#comment-list').prepend(html); //최상단에 html넣기
+
+             })
+             .fail(function(xhr, textStatus, error) {
+               alert('failed:' + error);
+             });
+
+    });
+
+
+    $.get('{% url "blog:comment_list" post.pk %}')
+        .done(function (html) {
+            $('#comment-list').html(html);
+        })
+        .fail(function (xhr, textStatus, error) {
+            alert('failed:' + error);
+        });
+});
+
+</script>
+
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-sm-12">
+             <h1>{{ post.title }}</h1>
+
+
+             {{ post.content|linebreaks }}
+
+             <hr/>
+
+
+
+
+
+
+            <a href="{%  url "blog:comment_new" post.pk %}" class="comment-form-btn btn-primary btn-block  btn" > 댓글쓰기</a>
+
+                </hr>
+
+            <a id="check-comment" class="btn btn-primary btn-block">
+                새 댓글 체크
+            </a>
+            <div id="comment-list">
+
+            </div>
+
+
+
+</hr>
+
+        </div>
+    </div>
+</div>
+<a href="{% url 'blog:index' %}" class="btn btn-primary">목록</a>
+<a href="{% url 'blog:post_edit' post.id %}" class="btn btn-primary">
+    수정
+</a>
+<a href="{% url 'blog:post_delete' post.id %}" class="btn btn-danger">
+    삭제
+</a>
+
+
+
+{% endblock %}
+
+
+
+

@@ -1,0 +1,40 @@
+{% load thumbnail %}
+
+<div id="comment-{{ comment.pk }}" class="media comment" data-comment-id="{{ comment.id }}">
+    {%  if comment.photo %}
+        <div class="media-left">
+             <a href="#">
+                 <img src="{% thumbnail comment.photo 100x100 crop %}" style="width: 100px;"/>
+             </a>
+        </div>
+    {% endif %}
+
+    <div class="media-body">
+        {# <h4 class="media-heading">Media heading</h4> #}
+        ...
+
+        <p>{{ comment.message }}</p>
+        &dash;
+
+         <a href="{% url "blog:comment_edit" comment.post.pk comment.pk %}" class="modal-form-btn"
+        data-target-id="comment-{{ comment.pk }}">
+          <small>{{ comment.updated_at }}</small>
+        </a>
+
+        <a href="{% url "blog:comment_delete" comment.post.pk comment.pk %}"
+            class="ajax-post-confirm"
+            data-target-id="comment-{{ comment.pk }}"
+            data-message="정말 삭제하시겟습니까?">
+
+            <small>삭제</small>
+        </a>
+    </div>
+
+</div>
+
+
+
+
+
+
+
